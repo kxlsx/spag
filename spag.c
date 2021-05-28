@@ -19,9 +19,10 @@
 #define DEFAULT_CHARSET CRAND_PHRASE_WRITE_CHARSET_ALL
 #define DEFAULT_SEP CRAND_PHRASE_WRITE_SEP_NEWLINE
 
-int read_flags(int argc, char *argv[]);
+int parse_flags(int argc, char *argv[]);
 int parse_charset_str(char *charset_str);
 int parse_sep_str(char *sep_str);
+
 void print_help(void);
 void print_license(void);
 void print_version(void);
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]){
 	size_t phrase_length, phrase_num;
 	unsigned charset, sep;
 
-	if((rt = read_flags(argc, argv)) != SUCCESS)
+	if((rt = parse_flags(argc, argv)) != SUCCESS)
 		return rt;
 
 	if(flags[FLAG_HELP].is_present){
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]){
 	return rt;
 }
 
-int read_flags(int argc, char *argv[]){
+int parse_flags(int argc, char *argv[]){
 	char *flag_str;
 	struct flag *flag;
 	unsigned is_value_expected;

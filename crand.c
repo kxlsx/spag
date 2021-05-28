@@ -12,14 +12,28 @@
 			return CRAND_FAILURE;
 		return CRAND_SUCCESS;
 	}
-#else
-	#include <sys/random.h>
+#elif defined __unix__
+	#define URANDOM_PATH "/dev/urandom"
+	static FILE *urandom = NULL;
+
+	void urandom_close(){
+		fclose(urandom);
+	}
 
 	int rand_bytes(void *buf, size_t n){
-		if(getrandom(buf, n, 0) != (ssize_t)n)
+		if(urandom == NULL){
+			if((urandom = fopen(URANDOM_PATH, "r")) == NULL)
+				return CRAND_FAILURE;
+			else
+				atexit(urandom_close);
+		}
+		
+		if(fread(buf, 1, n, urandom) != n)
 			return CRAND_FAILURE;
 		return CRAND_SUCCESS;
 	}
+#else
+	#error Unsupported platform.
 #endif
 
 int crandb(void *buf, size_t n){
@@ -52,8 +66,8 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	void set_crand_phrase_write_params(int flags, struct charset_bound *chb, char *sep);
 	char sep;
 	struct charset_bound chb;
-	unsigned *buf;
-	size_t buf_len, buf_size;
+	unsigned char *buf;
+	size_t buf_len;
 	size_t i;
 
 	if(!(phraselen && phrasen))
@@ -61,12 +75,13 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	set_crand_phrase_write_params(flags, &chb, &sep);
 	
 	buf_len = phrasen * phraselen;
- 	buf_size = buf_len * sizeof(unsigned);
-	if((buf = malloc(buf_size)) == NULL)
+	if((buf = malloc(buf_len)) == NULL)
 		return CRAND_MALLOC_FAILURE;
 
-	if(crandb(buf, buf_size) == CRAND_FAILURE)
+	if(crandb(buf, buf_len) == CRAND_FAILURE){
 		return CRAND_FAILURE;
+		free(buf);
+	}
 
 	i = 0;
 	while(i < buf_len){
@@ -74,8 +89,10 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 		if(i % phraselen == 0) putc(sep, dst);
 	}
 
-	if(ferror(dst) != 0)
+	if(ferror(dst) != 0){
 		return CRAND_WRITE_FAILURE;
+		free(buf);
+	}
 
 	free(buf);
 	return CRAND_SUCCESS;
