@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "schema.h"
+#include "meta.h"
 #include "crand.h"
 
 #define eprintf(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
@@ -29,7 +29,7 @@ void print_version(void);
 int main(int argc, char *argv[]){
 	int rt;
 	size_t phrase_length, phrase_num;
-	unsigned int charset, sep;
+	unsigned charset, sep;
 
 	if((rt = read_flags(argc, argv)) != SUCCESS)
 		return rt;
@@ -94,14 +94,14 @@ int main(int argc, char *argv[]){
 int read_flags(int argc, char *argv[]){
 	char *flag_str;
 	struct flag *flag;
-	unsigned int value_expected;
+	unsigned is_value_expected;
 	size_t i;
 
 	flag = NULL;
-	value_expected = 0;
+	is_value_expected = 0;
 	for(i = 1; i < (size_t)argc; i++){
         if(*(argv[i]) == '-'){
-			if(value_expected){
+			if(is_value_expected){
 				eprintf("No value provided for \"%s\".\n", argv[i - 1]);
 				return ERR_NO_VALUE_PROVIDED;
 			}
@@ -140,20 +140,20 @@ int read_flags(int argc, char *argv[]){
 				}else if(*flag_str != '\0'){
 					flag->value = flag_str;
 				}else{
-					value_expected = 1;
+					is_value_expected = 1;
 				}
 			}
         }else{
-			if(value_expected){
+			if(is_value_expected){
 				flag->value = argv[i];
-				value_expected = 0;
+				is_value_expected = 0;
 			}else{
 				eprintf("Unrecognized argument \"%s\".\n", argv[i]);
 				return ERR_UNRECOGNIZED_VALUE;
 			}
 		}
 	}
-	if(value_expected){
+	if(is_value_expected){
 		eprintf("No value provided for \"%s\".\n", argv[i - 1]);
 		return ERR_NO_VALUE_PROVIDED;
 	}

@@ -16,7 +16,7 @@
 	#include <sys/random.h>
 
 	int rand_bytes(void *buf, size_t n){
-		if((size_t)getrandom(buf, n, 0) != n)
+		if(getrandom(buf, n, 0) != (ssize_t)n)
 			return CRAND_FAILURE;
 		return CRAND_SUCCESS;
 	}
@@ -52,7 +52,7 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	void set_crand_phrase_write_params(int flags, struct charset_bound *chb, char *sep);
 	char sep;
 	struct charset_bound chb;
-	unsigned int *buf;
+	unsigned *buf;
 	size_t buf_len, buf_size;
 	size_t i;
 
@@ -61,7 +61,7 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	set_crand_phrase_write_params(flags, &chb, &sep);
 	
 	buf_len = phrasen * phraselen;
- 	buf_size = buf_len * sizeof(unsigned int);
+ 	buf_size = buf_len * sizeof(unsigned);
 	if((buf = malloc(buf_size)) == NULL)
 		return CRAND_MALLOC_FAILURE;
 
