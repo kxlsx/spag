@@ -1,4 +1,4 @@
-#ifndef _CRAND_H
+#ifndef CRAND_H
 /* =============== */
 
 #ifndef _STDDEF_H
@@ -8,16 +8,16 @@
 #include <stdio.h>
 #endif
 
-#define _CRAND_H 1
+#define CRAND_H 1
 
 /* Fit n into <lbound; hbound) */
 #define LIMIT_TO_RANGE(n, lbound, hbound) \
 	((n) % ((hbound) - (lbound)) + (lbound))
 
-#define CRAND_SUCCESS 0
-#define CRAND_FAILURE 1
-#define CRAND_ARG_FAILURE 2
-#define CRAND_WRITE_FAILURE 3
+#define CRAND_SUCCESS        0
+#define CRAND_FAILURE        1
+#define CRAND_ARG_FAILURE    2
+#define CRAND_WRITE_FAILURE  3
 #define CRAND_MALLOC_FAILURE 4
 
 /* 

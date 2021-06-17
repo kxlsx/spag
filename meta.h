@@ -1,16 +1,16 @@
-#ifndef _META_H
+#ifndef META_H
 /* =============== */
 
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif
 
-#define _META_H 1
+#define META_H 1
 
 #define PROGRAM_NAME \
     "spag"
 #define VERSION \
-    "0.0.3"
+    "0.0.4"
 #define DESCRIPTION \
     "Generate random ASCII passphrases of set length (by default generate 1 phrase of length 16)."
 #define AUTHORS \
