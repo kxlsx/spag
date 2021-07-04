@@ -10,7 +10,7 @@
 #define PROGRAM_NAME \
     "spag"
 #define VERSION \
-    "0.0.4"
+    "0.0.5"
 #define DESCRIPTION \
     "Generate random ASCII passphrases of set length (by default generate 1 phrase of length 16)."
 #define AUTHORS \
@@ -28,7 +28,7 @@
 #define FLAG_LICENSE   'L'
 #define FLAG_VERSION   'V'
 
-#define FLAGSMAX 256
+#define FLAGSMAX 123
 static struct flag{
 	char *name;
 	char *description;
