@@ -4,6 +4,7 @@
 # make release     -> Build executable with release flags.
 # make release run -> Build executable with release flags, then run it.
 # make clean       -> Remove the executable.
+# Use the environment variable ARGS to pass arguments.
 
 # compiler and flags
 CC := gcc
@@ -33,14 +34,14 @@ set_release_flags:
 	$(eval CFLAGS_RUNTIME :=  $(CFLAGS_RELEASE) $(CFLAGS))
 
 run: all
-	.$(PATH_SEP)$(EXEC)
+	.$(PATH_SEP)$(EXEC) $(ARGS)
 	@echo Executing complete.
 
 clean:
 	$(RM) $(EXEC)
 	@echo Cleaning complete.
 
-$(EXEC):
+$(EXEC): $(SRCS)
 	$(CC) $(CFLAGS_RUNTIME) \
 		$(SRCS) \
 		-o $(EXEC)

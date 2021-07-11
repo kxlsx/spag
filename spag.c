@@ -6,6 +6,7 @@
 
 #define eprintf(fmt, ...) fprintf(stderr, fmt, ## __VA_ARGS__)
 
+/* Return values */
 #define SUCCESS 0
 #define ERR_CRAND_FAILURE  1
 #define ERR_NO_VALUE_PROVIDED 2
@@ -14,12 +15,9 @@
 #define ERR_UNRECOGNIZED_CHARSET 16
 #define ERR_UNRECOGNIZED_SEP 32
 
-#define DEFAULT_LENGTH 16
-#define DEFAULT_NUM 1
-#define DEFAULT_CHARSET CRAND_PHRASE_WRITE_CHARSET_ALL
-#define DEFAULT_SEP CRAND_PHRASE_WRITE_SEP_NEWLINE
-
 int parse_flags(int argc, char *argv[]);
+struct flag *parse_long_flag(char* flag_str);
+struct flag *parse_short_flag(char flag_ch);
 int parse_charset_str(char *charset_str);
 int parse_sep_str(char *sep_str);
 
@@ -35,13 +33,13 @@ int main(int argc, char *argv[]){
 	if((rt = parse_flags(argc, argv)) != SUCCESS)
 		return rt;
 
-	if(flags[FLAG_HELP].is_present){
+	if(FLAG(FLAG_HELP).is_present){
         print_help();
         return SUCCESS;
-    }else if(flags[FLAG_LICENSE].is_present){
+    }else if(FLAG(FLAG_LICENSE).is_present){
         print_license();
         return SUCCESS;
-    }else if(flags[FLAG_VERSION].is_present){
+    }else if(FLAG(FLAG_VERSION).is_present){
         print_version();
         return SUCCESS;
     }
@@ -50,21 +48,21 @@ int main(int argc, char *argv[]){
 	phrase_num = DEFAULT_NUM;
 	charset = DEFAULT_CHARSET;
 	sep = DEFAULT_SEP;
-	if(flags[FLAG_LENGTH].is_present)
-		phrase_length = strtoull(flags[FLAG_LENGTH].value, NULL, 0);
-	if(flags[FLAG_NUM].is_present)
-		phrase_num = strtoull(flags[FLAG_NUM].value, NULL, 0);
-	if(flags[FLAG_CHARSET].is_present){
-		charset = parse_charset_str(flags[FLAG_CHARSET].value);
+	if(FLAG(FLAG_LENGTH).is_present)
+		phrase_length = strtoull(FLAG(FLAG_LENGTH).value, NULL, 0);
+	if(FLAG(FLAG_NUM).is_present)
+		phrase_num = strtoull(FLAG(FLAG_NUM).value, NULL, 0);
+	if(FLAG(FLAG_CHARSET).is_present){
+		charset = parse_charset_str(FLAG(FLAG_CHARSET).value);
 		if(charset == ERR_UNRECOGNIZED_CHARSET){
-			eprintf("Unrecognized charset \"%s\".\n", flags[FLAG_CHARSET].value);
+			eprintf("Unrecognized charset \"%s\".\n", FLAG(FLAG_CHARSET).value);
 			return ERR_UNRECOGNIZED_CHARSET;
 		}
 	}
-	if(flags[FLAG_SEPARATOR].is_present){
-		sep = parse_sep_str(flags[FLAG_SEPARATOR].value);
+	if(FLAG(FLAG_SEPARATOR).is_present){
+		sep = parse_sep_str(FLAG(FLAG_SEPARATOR).value);
 		if(charset == ERR_UNRECOGNIZED_SEP){
-			eprintf("Unrecognized separator \"%s\".\n", flags[FLAG_SEPARATOR].value);
+			eprintf("Unrecognized separator \"%s\".\n", FLAG(FLAG_SEPARATOR).value);
 			return ERR_UNRECOGNIZED_SEP;
 		}
 	}
@@ -94,71 +92,77 @@ int main(int argc, char *argv[]){
 
 int parse_flags(int argc, char *argv[]){
 	char *flag_str;
-	struct flag *flag;
+	struct flag *fnd_flag;
 	unsigned is_value_expected;
-	size_t i;
+	int argi;
 
-	flag = NULL;
+	fnd_flag = NULL;
 	is_value_expected = 0;
-	for(i = 1; i < (size_t)argc; i++){
-        if(*(argv[i]) == '-'){
+	for(argi = 1; argi < argc; argi++){
+        if(*(argv[argi]) == '-'){
 			if(is_value_expected){
-				eprintf("No value provided for \"%s\".\n", argv[i - 1]);
+				eprintf("No value provided for \"%s\".\n", argv[argi - 1]);
 				return ERR_NO_VALUE_PROVIDED;
 			}
 
-			flag_str = argv[i] + 1;
+			flag_str = argv[argi] + 1;
 			if(*flag_str == '-'){
-				flag_str++;
-				for(size_t j = 0; j < FLAGSMAX; j++){
-					if(flags[j].name != NULL){
-						if(strstr(flag_str, flags[j].name) != NULL){
-							flag = flags + j;
-							flag_str += strlen(flag->name) - 1;
-						}
-					}
-				}
-				if(*(flag_str - 1) == '-'){
-					eprintf("Unrecognized flag \"%s\".\n", argv[i]);
+				if((fnd_flag = parse_long_flag(flag_str++)) == NULL){
+					eprintf("Unrecognized flag \"%s\".\n", argv[argi]);
 					return ERR_UNRECOGNIZED_FLAG;
 				}
-
+				flag_str += strlen(fnd_flag->name) - 1;
 			}else{
-				if(flags[(size_t)*flag_str].name != NULL){
-					flag = flags + *flag_str;
-				}else{
-					eprintf("Unrecognized flag \"%s\".\n", argv[i]);
+				if((fnd_flag = parse_short_flag(flag_str[0])) == NULL){
+					eprintf("Unrecognized flag \"%s\".\n", argv[argi]);
 					return ERR_UNRECOGNIZED_FLAG;
 				}
 			}
-			flag->is_present = 1;
-			if(flag->accepts_value){
+			fnd_flag->is_present = 1;
+			if(fnd_flag->accepts_value){
 				if(*(++flag_str) == '='){
-					if(*(flag->value = flag_str + 1) == '\0'){
-						eprintf("No value provided for \"%s\".\n", argv[i]);
+					if(*(fnd_flag->value = flag_str + 1) == '\0'){
+						eprintf("No value provided for \"%s\".\n", argv[argi]);
 						return ERR_NO_VALUE_PROVIDED;
 					}
 				}else if(*flag_str != '\0'){
-					flag->value = flag_str;
+					fnd_flag->value = flag_str;
 				}else{
 					is_value_expected = 1;
 				}
 			}
         }else{
 			if(is_value_expected){
-				flag->value = argv[i];
+				fnd_flag->value = argv[argi];
 				is_value_expected = 0;
 			}else{
-				eprintf("Unrecognized argument \"%s\".\n", argv[i]);
+				eprintf("Unrecognized argument \"%s\".\n", argv[argi]);
 				return ERR_UNRECOGNIZED_VALUE;
 			}
 		}
 	}
 	if(is_value_expected){
-		eprintf("No value provided for \"%s\".\n", argv[i - 1]);
+		eprintf("No value provided for \"%s\".\n", argv[argi - 1]);
 		return ERR_NO_VALUE_PROVIDED;
 	}
 	return SUCCESS;
+}
+
+struct flag *parse_short_flag(char flag_ch){
+	if(FLAG(flag_ch).ch != '\0'){
+		return FLAGS + FLAG_INDEX(flag_ch);
+	}
+	return NULL;
+}
+
+struct flag *parse_long_flag(char* flag_str){
+	for(unsigned flagi = 0; flagi < FLAGSMAX; flagi++){
+		if(FLAGS[flagi].ch != '\0'
+		&& strstr(flag_str, FLAGS[flagi].name) != NULL){
+			return FLAGS + flagi;
+		}
+	}
+	return NULL;
 }
 
 int parse_charset_str(char *charset_str){
@@ -194,8 +198,6 @@ int parse_sep_str(char *sep_str){
 }
 
 void print_help(void){
-    size_t i;
-
     puts(
         PROGRAM_NAME " v" VERSION "\n"
         AUTHORS "\n"
@@ -208,10 +210,10 @@ void print_help(void){
         "\n" 
         "FLAGS:"
     );
-    for(i = 0; i < FLAGSMAX; i++){
-        if(flags[i].name != NULL){
-            printf("\t-%c, --%s\n", (char)i, flags[i].name);
-            printf("\t\t%s\n\n", flags[i].description);
+    for(unsigned flagi = 0; flagi < FLAGSMAX; flagi++){
+        if(FLAGS[flagi].ch != '\0'){
+            printf("\t-%c, --%s\n", FLAGS[flagi].ch, FLAGS[flagi].name);
+            printf("\t\t%s\n\n", FLAGS[flagi].description);
         }
     }
 }
@@ -219,6 +221,8 @@ void print_help(void){
 void print_license(void){
     puts(
         PROGRAM_NAME " v" VERSION "\n"
+		AUTHORS "\n"
+		"\n"
         LICENSE
     );
 }
