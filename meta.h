@@ -49,7 +49,7 @@
 #define FLAG_LICENSE   'L'
 #define FLAG_VERSION   'V'
 
-#define FLAGSMAX 52
+#define FLAGSMAX 64
 #define FLAG_INDEX(flag_char) \
 	flag_char % FLAGSMAX
 #define FLAG_INIT(flag_char, flag_name, flag_description, flag_accepts_value) \
