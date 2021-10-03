@@ -42,26 +42,6 @@ int crandb(void *buf, size_t n){
 	return rand_bytes(buf, n);
 };
 
-#define CHARSET_MAX 93
-const char CHARSET[CHARSET_MAX] = 
-	"abcdefghijklmnopqrstuvwxyz"
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	"0123456789"
-	"!?@#$%&()[]{}<>*+-^=/\\|_.,:;\'\"`";
-
-struct charset_bound{
-	size_t lower;
-	size_t higher;
-};
-#define CHARSET_BOUND_ALL      (struct charset_bound){ 0, CHARSET_MAX}
-#define CHARSET_BOUND_ALNUM    (struct charset_bound){ 0,          62}
-#define CHARSET_BOUND_ALPHA    (struct charset_bound){ 0,          52}
-#define CHARSET_BOUND_NOTALPHA (struct charset_bound){52, CHARSET_MAX}
-#define CHARSET_BOUND_LOWER    (struct charset_bound){ 0,          26}
-#define CHARSET_BOUND_UPPER    (struct charset_bound){26,          52}
-#define CHARSET_BOUND_DIGITS   (struct charset_bound){52,          62}
-#define CHARSET_BOUND_PUNCT    (struct charset_bound){62, CHARSET_MAX}
-
 int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	void set_crand_phrase_write_params(int flags, struct charset_bound *chb, char *sep);
 	char sep;
@@ -79,8 +59,8 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 		return CRAND_MALLOC_FAILURE;
 
 	if(crandb(buf, buf_len) == CRAND_FAILURE){
-		return CRAND_FAILURE;
 		free(buf);
+		return CRAND_FAILURE;
 	}
 
 	i = 0;
@@ -90,8 +70,8 @@ int crand_phrase_write(FILE *dst, size_t phraselen, size_t phrasen, int flags){
 	}
 
 	if(ferror(dst) != 0){
-		return CRAND_WRITE_FAILURE;
 		free(buf);
+		return CRAND_WRITE_FAILURE;
 	}
 
 	free(buf);
