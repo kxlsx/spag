@@ -13,12 +13,32 @@
 		return CRAND_SUCCESS;
 	}
 #elif defined __unix__ || defined __APPLE__ && defined __MACH__
-	#include <stdlib.h>
+    #if !defined __GLIBC__ || __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 36
+        int rand_bytes(void *buf, size_t n){
+            arc4random_buf(buf, n);
+            return CRAND_SUCCESS;
+        }
+    #else
+        #define URANDOM_PATH "/dev/urandom"
+        static FILE *urandom = NULL;
 
-	int rand_bytes(void *buf, size_t n){
-		arc4random_buf(buf, n);
-		return CRAND_SUCCESS;
-	}
+        void urandom_close(){
+            fclose(urandom);
+        }
+
+        int rand_bytes(void *buf, size_t n){
+            if(urandom == NULL){
+                if((urandom = fopen(URANDOM_PATH, "r")) == NULL)
+                    return CRAND_FAILURE;
+                else
+                    atexit(urandom_close);
+            }
+
+            if(fread(buf, 1, n, urandom) != n)
+                return CRAND_FAILURE;
+            return CRAND_SUCCESS;
+        }
+    #endif
 #else
 	#error Unsupported platform.
 #endif
