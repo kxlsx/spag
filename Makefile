@@ -8,7 +8,7 @@
 
 # compiler and flags
 CC := gcc
-CFLAGS := -march=native -Wall -Wextra -Wshadow -Wundef
+CFLAGS := -Wall -Wextra -Wshadow -Wundef
 CFLAGS_DEBUG   := -g3
 CFLAGS_RELEASE := -O3
 CFLAGS_RUNTIME := $(CFLAGS_DEBUG) $(CFLAGS)
@@ -23,6 +23,15 @@ RM := del /q /f
 else
 PATH_SEP := /
 RM := rm -f
+endif
+
+# check for apple M1
+ARCH := $(shell uname -m)
+PLATFORM := $(shell uname -s)
+ifeq "$(PLATFORM) $(ARCH)" "Darwin arm64"
+	CFLAGS += -mcpu=apple-m1
+else
+	CFLAGS += -march=native
 endif
 
 .PHONY: all release set_release_flags run clean
