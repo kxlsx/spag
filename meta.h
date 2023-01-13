@@ -29,7 +29,7 @@
 #define PROGRAM_NAME \
     "spag"
 #define VERSION \
-    "0.0.7"
+    "0.1.0"
 #define DESCRIPTION \
     "Generate random ASCII passphrases of set length " \
 	"(by default generate " PHRASE_NUM_STR " of length " PHRASE_LENGTH_STR ")."
